@@ -2,6 +2,8 @@ const csv = require('csv-parser');
 const fs = require('fs');
 const Agent = require('../models/Agent');
 const Task = require('../models/Task');
+const mongoose = require('mongoose');
+
 
 exports.uploadAndDistribute = async (req, res) => {
     try {
@@ -9,10 +11,14 @@ exports.uploadAndDistribute = async (req, res) => {
             return res.status(400).send('No file uploaded.');
         }
 
-        const agents = await Agent.find().limit(5);
-        if (agents.length < 5) {
+        //Remove .limit(5) to fetch ALL agents for the current admin ---
+        const agents = await Agent.find({ createdBy: req.admin.id });
+        
+        //Check if there is at least ONE agent, instead of checking for 5 ---
+        if (agents.length === 0) {
             fs.unlinkSync(req.file.path);
-            return res.status(400).json({ message: "Need at least 5 agents in the database to distribute tasks." });
+            // Update the error message
+            return res.status(400).json({ message: "You must create at least one agent before distributing tasks." });
         }
 
         const tasksData = [];
@@ -31,17 +37,9 @@ exports.uploadAndDistribute = async (req, res) => {
             })
             .on('end', async () => {
                 try {
-                    await Task.deleteMany({}); 
-
-                    let agentIndex = 0;
-                    for (const task of tasksData) {
-                        const assignedAgent = agents[agentIndex];
-                        const newTask = new Task({ ...task, assignedTo: assignedAgent._id });
-                        await newTask.save();
-                        agentIndex = (agentIndex + 1) % agents.length;
-                    }
+                    await distributeTasks(agents, tasksData, req.admin.id);
                     
-                    fs.unlinkSync(filePath); 
+                    fs.unlinkSync(filePath);
                     res.status(200).json({ message: "CSV processed and tasks distributed successfully." });
                 } catch(dbError){
                     fs.unlinkSync(filePath);
@@ -54,15 +52,47 @@ exports.uploadAndDistribute = async (req, res) => {
     }
 };
 
+
+async function distributeTasks(agents, tasks, adminId) {
+    await Task.deleteMany({ createdBy: adminId });
+
+    let agentIndex = 0;
+    for (const task of tasks) {
+        const assignedAgent = agents[agentIndex];
+        const newTask = new Task({ 
+            ...task, 
+            assignedTo: assignedAgent._id,
+            createdBy: adminId
+        });
+        await newTask.save();
+        agentIndex = (agentIndex + 1) % agents.length;
+    }
+    console.log(`Tasks have been distributed among ${agents.length} agents.`);
+}
+
 exports.getDistributedLists = async (req, res) => {
     try {
+        const adminId = new mongoose.Types.ObjectId(req.admin.id);
+
         const lists = await Agent.aggregate([
-            { $limit: 5 },
+            { $match: { createdBy: adminId } },
+
             {
                 $lookup: {
                     from: "tasks",
-                    localField: "_id",
-                    foreignField: "assignedTo",
+                    let: { agent_id: "$_id" },
+                    pipeline: [
+                        { $match: 
+                            { $expr: 
+                                { $and:
+                                    [
+                                        { $eq: [ "$assignedTo", "$$agent_id" ] },
+                                        { $eq: [ "$createdBy", adminId ] }
+                                    ]
+                                }
+                            }
+                        }
+                    ],
                     as: "tasks"
                 }
             },

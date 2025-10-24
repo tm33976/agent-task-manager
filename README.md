@@ -1,154 +1,138 @@
 # MERN Task Distribution & Agent Management App
 
-This is a full-stack MERN application designed for an administrator to manage a team of agents and automatically distribute tasks to them by uploading a CSV file. The application features a secure admin login, agent creation, and a robust task distribution logic.
+This is a full-stack, multi-tenant MERN application designed for administrators to manage teams of agents and automatically distribute tasks. It features a responsive sidebar navigation, secure admin registration/login, agent management, and automatic task distribution from a CSV file.
 
 
+---
 
-## Features
+## ✨ Features
 
-- **Secure Admin Login:** Authentication is handled using JSON Web Tokens (JWT) to ensure secure access to the dashboard.
-- **Agent Management:** Admins can create and view a list of agents who will be assigned tasks.
-- **CSV Task Upload:** Admins can upload a .csv file containing a list of tasks (e.g., leads, contacts).
-- **Automatic Task Distribution:** The core feature of the application. Tasks from the uploaded CSV are automatically and equally distributed among the 5 available agents. The logic also handles remainders for lists not perfectly divisible by 5.
-- **Modern & Responsive UI:** The user interface is built with Vite, React, and Tailwind CSS for a stunning, fast, and fully responsive experience on all devices.
+### 🔐 Secure Admin Authentication
+- **Admin Signup:** New admin users can create their own accounts.  
+- **Admin Login:** Secure login system using JSON Web Tokens (JWT).  
+- **Password Security:** All passwords are hashed and salted using bcrypt.js.  
 
-## Tech Stack
+### 🏢 Multi-Tenant Architecture
+A key feature ensuring that admins can only view, create, and manage the agents and tasks that belong to their own account. Data is fully isolated between users.
 
-### Frontend:
-- React.js (v18): A JavaScript library for building user interfaces.
-- Vite: A lightning-fast frontend build tool.
-- Tailwind CSS: A utility-first CSS framework for rapid, modern UI development.
-- React Router: For handling client-side routing and navigation.
-- Axios: For making HTTP requests to the backend API.
+### 🧭 Responsive Dashboard Layout
+- Modern, responsive UI with a fixed sidebar for desktop navigation.  
+- Collapsible hamburger menu for mobile.  
+- Uses **React Router v6** for nested routing (Dashboard, Manage Agents, Upload Tasks).
 
-### Backend:
-- Node.js: A JavaScript runtime environment.
-- Express.js: A web application framework for Node.js.
-- MongoDB: A NoSQL database for storing application data.
-- Mongoose: An ODM library for MongoDB and Node.js.
-- JSON Web Token (JWT): For handling user authentication.
-- Bcrypt.js: For hashing user passwords securely.
-- Multer: For handling file uploads (CSV files).
+### 👥 Agent Management
+- Admins can create new agents (Name, Email, Mobile, Password).  
+- View a list of all agents under the logged-in admin.  
 
-## Prerequisites
+### 📋 Flexible Task Distribution
+- Upload `.csv` file with task details (`FirstName`, `Phone`, `Notes`).  
+- Backend validation with **Multer** to accept spreadsheet file types only.  
+- Tasks distributed equally among all available agents.  
 
-Before you begin, ensure you have the following installed on your system:
+### 💎 Modern UI/UX
+- Built with **React**, **Vite**, and **Tailwind CSS**.  
+- Stylish, responsive tables with hover and zebra effects.  
+- Clean, focused form design.  
 
-- Node.js (v18 or later recommended)
+---
+
+## 🧰 Tech Stack
+
+### Frontend
+- React.js (v18)
+- Vite
+- React Router (v6)
+- Tailwind CSS
+- Axios
+
+### Backend
+- Node.js
+- Express.js
+- MongoDB
+- Mongoose
+- JSON Web Token (JWT)
+- Bcrypt.js
+- Multer
+- csv-parser
+
+---
+
+## ⚙️ Prerequisites
+Make sure you have:
+- Node.js (v18 or later)
 - npm (comes with Node.js)
-- A MongoDB database instance (local or a cloud service like MongoDB Atlas)
+- MongoDB (local or Atlas)
 
-## Setup and Installation
+---
 
-Follow these steps to get the project running locally.
+## 🚀 Setup and Installation
 
-### 1. Clone the Repository
-
+### 1️⃣ Clone the Repository
 ```bash
 git clone https://github.com/tm33976/agent-task-manager.git
 cd agent-task-manager
 ```
 
-### 2. Backend Setup (server)
-
+### 2️⃣ Backend Setup (server)
 ```bash
-# Navigate to the server directory
 cd server
-# Install dependencies
 npm install
 ```
 
-Create a `.env` file in the `/server` directory and add the following variables:
-
-```env
-# Your MongoDB connection string from MongoDB Atlas
+Create a `.env` file in `/server`:
+```bash
 MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/<database_name>?retryWrites=true&w=majority
-
-# A strong, secret key for signing JWTs
 JWT_SECRET=YOUR_SECRET_KEY
-
-# PORT
 PORT=5001
 ```
 
-### 3. Frontend Setup (client)
-
+### 3️⃣ Frontend Setup (client)
 ```bash
-# Navigate to the client directory from the root
 cd client
-# Install dependencies
 npm install
 ```
 
-Create a `.env.local` file in the `/client` directory and add the following:
-
-```env
-# The base URL for your backend API
+Create `.env.local` in `/client`:
+```bash
 VITE_API_BASE_URL=http://localhost:5001/api
 ```
 
-## Running the Application
+---
 
-You need to run both the backend and frontend servers simultaneously in two separate terminals.
+## ▶️ Running the Application
 
-### 1. Start the Backend Server
+Run both backend and frontend in separate terminals:
 
+**Backend:**
 ```bash
-# In a terminal, navigate to the server directory
 cd server
 npm start
-# The server will be running on http://localhost:5001
+# Runs on http://localhost:5001
 ```
 
-### 2. Start the Frontend Server
-
+**Frontend:**
 ```bash
-# In a NEW terminal, navigate to the client directory
 cd client
 npm run dev
-# The application will open in your browser, usually at http://localhost:5173
+# Opens on http://localhost:5173
 ```
-
-## Usage / Application Workflow
-
-### 1. Create the First Admin User
-
-The database is initially empty. To log in, you must first create an admin user via the API.
-
-For Git Bash, macOS, or Linux terminals:
-
-```bash
-curl -X POST -H "Content-Type: application/json" -d '{"email":"admin@example.com", "password":"password123"}' http://localhost:5001/api/admin/register
-```
-
-For Windows PowerShell terminal:
-
-```powershell
-Invoke-WebRequest -Uri http://localhost:5001/api/admin/register -Method POST -Headers @{"Content-Type"="application/json"} -Body '{"email":"admin@example.com", "password":"password123"}'
-```
-
-### 2. Log In
-
-Go to the application in your browser. Use the credentials you just created (`admin@example.com` / `password123`) to log in.
-
-### 3. Create Agents
-
-On the dashboard, create at least 5 agents. The task distribution logic relies on having 5 agents.
-
-### 4. Upload Tasks
-
-Upload a CSV file with the following exact headers:
-
-```
-FirstName, Phone, Notes
-```
-
-The tasks will be automatically distributed among the 5 agents you created, and the dashboard will update to show the results.
-
 
 ---
 
-## Author
+## 🧭 Usage / Workflow
 
-👨‍💻 **Tushar Mishra**  
+1. Start both servers.  
+2. Open `http://localhost:5173`.  
+3. Sign up as a new admin (`admin1@test.com`).  
+4. Log in with your credentials.  
+5. Go to **Manage Agents** → Create agents.  
+6. Go to **Upload Tasks** → Upload CSV file.  
+7. Go to **Dashboard** → View distributed tasks.  
+8. Log out and register a second admin (`admin2@test.com`).  
+   - You’ll see an empty dashboard, confirming **multi-tenancy**.  
+
+---
+
+## 👨‍💻 Author
+**Tushar Mishra**  
 📧 Email: [tm3390782@gmail.com](mailto:tm3390782@gmail.com)

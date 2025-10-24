@@ -5,6 +5,11 @@ const TaskSchema = new mongoose.Schema({
   phone: { type: String, required: true },
   notes: { type: String },
   assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'Agent', required: true },
+  createdBy: { //  Added this field
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Admin',
+    required: true
+  }
 });
 
 module.exports = mongoose.model('Task', TaskSchema);
